@@ -2,7 +2,11 @@ import sqlite3
 import hashlib
 from datetime import datetime
 
-DB_NAME = "ictu_system.db"
+import os
+import tempfile
+
+# Sử dụng thư mục tạm của hệ thống để đảm bảo luôn có quyền ghi trên Streamlit Cloud
+DB_PATH = os.path.join(tempfile.gettempdir(), "ictu_system.db")
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
