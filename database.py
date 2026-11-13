@@ -1,18 +1,18 @@
+import os
 import sqlite3
 import hashlib
+import tempfile
 from datetime import datetime
 
-import os
-import tempfile
+# Lưu database vào thư mục tạm có quyền ghi trên Streamlit Cloud
+DB_NAME = os.path.join(tempfile.gettempdir(), "ictu_system.db")
 
-# Sử dụng thư mục tạm của hệ thống để đảm bảo luôn có quyền ghi trên Streamlit Cloud
-DB_PATH = os.path.join(tempfile.gettempdir(), "ictu_system.db")
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
 
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    
-    # 1. Bảng lưu thông tin tài khoản sinh viên
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -24,8 +24,6 @@ def init_db():
             created_at TEXT
         )
     ''')
-    
-    # 2. Bảng lưu lịch sử kết quả tính điểm & xếp loại học lực
     c.execute('''
         CREATE TABLE IF NOT EXISTS academic_records (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,62 +34,56 @@ def init_db():
             tbtn1 REAL NOT NULL,
             tbkt REAL NOT NULL,
             thi REAL NOT NULL,
-            score_10 REAL NOT NULL,
-            score_4 REAL NOT NULL,
-            letter_grade TEXT NOT NULL,
-            classification TEXT NOT NULL,
-            created_at TEXT NOT NULL
+            diem_10 REAL NOT NULL,
+            diem_4 REAL NOT NULL,
+            diem_chu TEXT NOT NULL,
+            xep_loai TEXT NOT NULL,
+            created_at TEXT
         )
     ''')
-    
     conn.commit()
     conn.close()
-
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
 
 def register_user(full_name, mssv, email, password, faculty):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         c.execute('''
             INSERT INTO users (full_name, mssv, email, password, faculty, created_at)
             VALUES (?, ?, ?, ?, ?, ?)
         ''', (full_name.strip(), mssv.strip().upper(), email.strip().lower(), hash_password(password), faculty, now))
         conn.commit()
-        return True, "Đăng ký tài khoản thành công! Vui lòng đăng nhập."
+        return True, "Đăng ký tài khoản thành công! Vui lòng quay lại màn hình đăng nhập."
     except sqlite3.IntegrityError:
         return False, "Mã sinh viên (MSSV) hoặc Email này đã được đăng ký!"
     finally:
         conn.close()
 
-def login_user(username_or_email, password):
+def login_user(username, password):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    user_input = username_or_email.strip()
+    user_input = username.strip()
     hashed_pw = hash_password(password)
-    
     c.execute('''
         SELECT full_name, mssv, email, faculty FROM users
         WHERE (UPPER(mssv) = UPPER(?) OR LOWER(email) = LOWER(?)) AND password = ?
     ''', (user_input, user_input, hashed_pw))
-    
     user = c.fetchone()
     conn.close()
     return user
 
-# --- CÁC HÀM QUẢN LÝ DỮ LIỆU ĐIỂM HỌC PHẦN ---
-
-def save_academic_record(mssv, subject_name, credits, tdl, tbtn1, tbkt, thi, score_10, score_4, letter_grade, classification):
+def save_academic_record(mssv, subject_name, credits, tdl, tbtn1, tbkt, thi, diem_10, diem_4, diem_chu, xep_loai):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    now = datetime.now().strftime("%d/%m/%Y %H:%M")
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     c.execute('''
-        INSERT INTO academic_records 
-        (mssv, subject_name, credits, tdl, tbtn1, tbkt, thi, score_10, score_4, letter_grade, classification, created_at)
+        INSERT INTO academic_records (
+            mssv, subject_name, credits, tdl, tbtn1, tbkt, thi,
+            diem_10, diem_4, diem_chu, xep_loai, created_at
+        )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (mssv, subject_name.strip(), credits, tdl, tbtn1, tbkt, thi, score_10, score_4, letter_grade, classification, now))
+    ''', (mssv, subject_name, credits, tdl, tbtn1, tbkt, thi, diem_10, diem_4, diem_chu, xep_loai, now))
     conn.commit()
     conn.close()
 
@@ -99,7 +91,8 @@ def get_records_by_mssv(mssv):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute('''
-        SELECT id, subject_name, credits, tdl, tbtn1, tbkt, thi, score_10, score_4, letter_grade, classification, created_at
+        SELECT id, subject_name, credits, tdl, tbtn1, tbkt, thi,
+               diem_10, diem_4, diem_chu, xep_loai, created_at
         FROM academic_records
         WHERE mssv = ?
         ORDER BY id DESC
