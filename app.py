@@ -251,7 +251,7 @@ def show_auth_page():
             <div class="slogan-box">
                 <div class="slogan-script">Học tập tốt<br>– Tương lai sáng</div>
                 <div class="slogan-desc">
-                    Hệ thống phân tích, đánh giá và dự đoán xếp loại học lực sinh viên chuẩn quy chế ICTU.
+                    Hệ thống phân loại xếp loại học lực sinh viên chuẩn quy chế ICTU.
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -354,7 +354,7 @@ def show_auth_page():
 
     st.markdown("""
         <div class="custom-footer">
-            <div>📊 Ứng dụng hỗ trợ phân tích và đánh giá học lực sinh viên một cách chính xác, hiệu quả</div>
+            <div>📊 Ứng dụng hỗ trợ phân tích và phân loại học lực sinh viên một cách chính xác, hiệu quả</div>
             <div>🎓 Vì một môi trường giáo dục thông minh</div>
         </div>
     """, unsafe_allow_html=True)
@@ -400,7 +400,7 @@ def show_main_dashboard():
     # Thanh tiêu đề & Đăng xuất
     head_col1, head_col2 = st.columns([4.2, 1])
     with head_col1:
-        st.title("🎓 Hệ Thống Quản Lý & Dự Đoán Học Lực Sinh Viên (ICTU)")
+        st.title("🎓 Hệ Thống Phân Loại Học Lực Sinh Viên (ICTU)")
         st.caption(f"Sinh viên: **{user['full_name']}** | MSSV: **{user['mssv']}** | **{user['faculty']}**")
     with head_col2:
         st.write("")
@@ -424,7 +424,7 @@ def show_main_dashboard():
     try:
         model, scaler = load_assets()
         tab1, tab2, tab3, tab4, tab5 = st.tabs([
-            "📝 Dự đoán & Phân tích Môn học",
+            "📝 Phân Loại Môn học",
             "🎯 Mô phỏng Điểm thi Mục tiêu",
             "📁 Phân loại Hàng loạt (Lớp học)",
             "🗂️ Lịch Sử & Nâng hạng GPA",
